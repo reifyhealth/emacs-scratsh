@@ -42,7 +42,7 @@
 	(vterm-send-return)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; scratch buffer setup
+;; scratch buffer operations
 
 (defun scratsh--create-scratch-buffer ()
   (let ((scratch-buffer (generate-new-buffer "*scratsh*")))
@@ -52,15 +52,22 @@
 	scratch-buffer))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; shell buffer operations
+
+(defun scratsh--connect-shell-to-new-scratch-buffer (shell-buffer)
+  (let ((scratch-buffer (scratsh--create-scratch-buffer)))
+	(setq scratsh-primary-scratch-buffer (buffer-name scratch-buffer))
+	(switch-to-buffer-other-window scratch-buffer)
+	(setq scratsh-linked-shell-buffer (buffer-name shell-buffer))
+	(message "Connected buffers: %s <--> %s " shell-buffer scratch-buffer)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; top-level api
 
 (defun scratsh-send-region (start end)
   (interactive "r")
   (scratsh--send-text (buffer-substring start end))
   (scratsh--send-return))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; major mode
 
 (defun scratsh-connect (buffer-name)
   (interactive "bSelect shell buffer: ")
@@ -70,14 +77,16 @@
 ;; TODO: check if already connected in
 (defun scratsh-jack-in ()
   (interactive)
-  (if scratsh-primary-scratch-buffer
-	  (error "bad")
-	(let ((shell-buffer (current-buffer))
-		  (scratch-buffer (scratsh--create-scratch-buffer)))
-	  (setq scratsh-primary-scratch-buffer (buffer-name scratch-buffer))
-	  (switch-to-buffer-other-window scratch-buffer)
-	  (setq scratsh-linked-shell-buffer (buffer-name shell-buffer))
-	  (message "Connected buffers: %s <--> %s " shell-buffer scratch-buffer))))
+  (let ((shell-buffer (current-buffer)))
+	(if scratsh-primary-scratch-buffer
+		(when (y-or-n-p
+			   (format "This shell is already attached to %s. Make a new scratch buffer primary?"
+					   scratsh-primary-scratch-buffer))
+		  (scratsh--connect-shell-to-new-scratch-buffer shell-buffer))
+	  (scratsh--connect-shell-to-new-scratch-buffer shell-buffer))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; major mode
 
 (define-derived-mode scratsh-mode sh-mode "Scratsh"
   "Major mode for using a shell with a scratch buffer."
