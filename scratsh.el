@@ -10,7 +10,8 @@
 ;; [ ] support bash and ?
 ;; [X] customize inserting of logo on startup
 ;; [ ] readme
-;; [ ] docstrings on public functions
+;; [ ] detect scripting language based on shell
+;; [X] docstrings on public functions
 ;; [ ] configure windows for nice use (e.g. vertical stacking)
 (require 'a)
 (require 'dash)
@@ -140,33 +141,74 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; top-level api
 
-(defun scratsh-new ()
-  (interactive)
-  (switch-to-buffer (scratsh--create-scratch-buffer)))
-
 (defun scratsh-send ()
+  "Send the region between two comment lines to the connected shell. If there is no comment
+line before (resp. after) the current point, then the region extends to the beginning
+(resp. end) of the buffer.
+
+If the current buffer is not connected to a shell, an error will be thrown. To connect,
+run the command `scratsh-connect'.
+
+See also: `scratsh-send-buffer' `scratsh-send-region'"
   (interactive)
   (-> (buffer-substring (scratsh--current-min) (scratsh--current-max))
 	  (scratsh--clean-text)
 	  (scratsh--send-text))
-  (scratsh--send-return))
+  (scratsh--send-return)) 
 
 (defun scratsh-send-region (start end)
+  "Send the contents of the current region to the connected shell.
+
+If the current buffer is not connected to a shell, an error will be thrown. To connect,
+run the command `scratsh-connect'.
+
+See also: `scratsh-send' `scratsh-send-buffer'"
   (interactive "r")
   (scratsh--send-text (buffer-substring start end))
   (scratsh--send-return))
 
 (defun scratsh-send-buffer ()
+  "Send the contents of the current buffer to the connected shell.
+
+If the current buffer is not connected to a shell, an error will be thrown. To connect,
+run the command `scratsh-connect'.
+
+See also: `scratsh-send' `scratsh-send-region'"
   (interactive)
   (scratsh--send-text (buffer-string))
   (scratsh--send-return))
 
+(defun scratsh-new ()
+  "Create a new scratch buffer. If one or more scratch buffers already exist, then the created
+buffer will be named according to the behavior of `generate-new-buffer-name'.
+
+The newly created scratch buffer is not connected to any shell. To connect, run the command
+`scratsh-connect'.
+
+See also: `scratsh-connect' `scratsh-jack-in'"
+  (interactive)
+  (switch-to-buffer (scratsh--create-scratch-buffer)))
+
 (defun scratsh-connect (buffer-name)
+  "When called in a scratch buffer, connect the scratch buffer to a shell buffer. Behavior outside
+of scratch buffers is undefined.
+
+When called interactively, the user selects the target shell buffer in a menu.
+
+See also: `scratsh-jack-in' `scratsh-new'"
   (interactive "bSelect shell buffer: ")
   (setq scratsh-linked-shell-buffer buffer-name)
   (message "Connected to buffer: %s" scratsh-linked-shell-buffer))
 
 (defun scratsh-jack-in ()
+  "When called in a shell buffer H, creates a scratch buffer C, connects C to H, and sets C
+as the primary scratch buffer of H. Behavior outside of shell buffers is undefined.
+
+If the shell buffer already has a primary scratch buffer B, then the user will be prompted
+to screate a new scratch buffer and set the new buffer as primary. Regardless of the choice, B
+will remain connected to the shell.
+
+See also: `scratsh-connect' `scratsh-new'"
   (interactive)
   (let ((shell-buffer (current-buffer)))
 	(if scratsh-primary-scratch-buffer
