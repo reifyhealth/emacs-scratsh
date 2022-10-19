@@ -88,12 +88,11 @@
 	  (scratsh--maybe-insert-logo))
 	scratch-buffer))
 
-(defun scratsh--check-linked-shell
-	(when (scratsh-linked-shell-buffer)
-	  (with-current-buffer scratsh-linked-shell-buffer
-		(vterm-insert text))
-	  (if (y-or-n-p "No linked shell buffer. Connect to a shell? ")
-		  )))
+(defun scratsh--check-linked-shell ()
+  (when (scratsh-linked-shell-buffer)
+	(with-current-buffer scratsh-linked-shell-buffer
+	  (vterm-insert text))
+	(if (y-or-n-p "No linked shell buffer. Connect to a shell? "))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; shell buffer operations
@@ -156,7 +155,7 @@ See also: `scratsh-send-buffer' `scratsh-send-region'"
   (-> (buffer-substring (scratsh--current-min) (scratsh--current-max))
 	  (scratsh--clean-text)
 	  (scratsh--send-text))
-  (scratsh--send-return)) 
+  (scratsh--send-return))
 
 (defun scratsh-send-region (start end)
   "Send the contents of the current region to the connected shell.
