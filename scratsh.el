@@ -1,15 +1,26 @@
 ;; features
 ;; [X] send region to terminal
 ;; [X] major mode which branches off of shell
-;; [ ] minor mode which is used in shell buffer
+;; [X] minor mode which is used in scratch buffer
 ;; [X] link a buffer to terminal: default buffer
-;; [ ] link a buffer to terminal: multiple buffers
-;; [ ] reference shell buffer name in scratch mode lile
-;; [ ] eliminate newlines in shell output
-;; support bash, zsh, etc. (and set correctly (autodetect?))
-;; configure windows for nice use (e.g. vertical stacking)
+;; [X] link a buffer to terminal: multiple buffers
+;; [X] reference shell buffer name in scratch mode lile
+;; [X] eliminate newlines in shell output
+;; [ ] support both vterm and ansi-term
+;; [ ] support bash and ?
+;; [X] customize inserting of logo on startup
+;; [ ] readme
+;; [ ] docstrings on public functions
+;; [ ] configure windows for nice use (e.g. vertical stacking)
 (require 'a)
 (require 'dash)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; user options
+
+(defcustom scratsh-show-logo t
+  "If non-nil, then show the scratsh logo on startup. Otherwise, do not show the logo."
+  :group 'scratsh)
 
 ;; (defvar scratsh-shell-configurations
 ;;   '(:term (:insert-function #'term-send-raw-string
@@ -24,12 +35,6 @@
 
 ;; (defvar-local scratsh-local-shell-configuration nil)
 
-(defvar-local scratsh-linked-shell-buffer nil
-  "The shell buffer linked to a scratsh buffer.")
-
-(defvar-local scratsh-primary-scratch-buffer nil
-  "The primary scratch buffer linked to a shell buffer.")
-
 (defconst scratsh-logo
   "###########################################################
 #   _________                        __          .__      #
@@ -43,6 +48,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; scratch buffer operations
+
+(defvar-local scratsh-linked-shell-buffer nil
+  "The shell buffer linked to a scratsh buffer.")
 
 (defconst scratsh-comment-separator "#")
 (defconst scratsh-comment-start-regexp (concat "^" scratsh-comment-separator))
@@ -66,13 +74,15 @@
 	  (progn (goto-char (point-max))
 			 (if (looking-at "^$") (- (point) 1) (point))))))
 
+(defun scratsh--maybe-insert-logo () (when scratsh-show-logo (insert scratsh-logo)))
+
 (defun scratsh--create-scratch-buffer ()
   (let ((scratch-buffer (generate-new-buffer "*scratsh*")))
 	(with-current-buffer scratch-buffer
 	  (sh-mode)
 	  (scratsh-shell-minor-mode 1)
 	  (sh-set-shell "bash" t nil)
-	  (insert scratsh-logo))
+	  (scratsh--maybe-insert-logo))
 	scratch-buffer))
 
 (defun scratsh--check-linked-shell
@@ -84,6 +94,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; shell buffer operations
+
+(defvar-local scratsh-primary-scratch-buffer nil
+  "The primary scratch buffer linked to a shell buffer.")
 
 (defun scratsh--clean-text (text)
   (replace-regexp-in-string "\n[\n]+" "" text))
@@ -156,6 +169,13 @@
 			(define-key keymap (kbd "C-c C-c") 'scratsh-send)
 			(define-key keymap (kbd "C-c C-r") 'scratsh-send-region)
 			(define-key keymap (kbd "C-c C-b") 'scratsh-send-buffer)
-			keymap))
+			keymap)
+  :lighter (:eval (concat " Scratsh["
+						  (if scratsh-linked-shell-buffer
+							  scratsh-linked-shell-buffer
+							(propertize "!disconnected!" 'face 'font-lock-warning-face))
+						  "]")))
+
+(propertize "!disconnected!" 'face 'font-lock-warning-face)
 
 (provide 'scratsh)
