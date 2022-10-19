@@ -120,7 +120,7 @@
 	(message "Connected buffers: %s <--> %s " shell-buffer scratch-buffer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; scratsh scratch minor mode
+;; minor mode for scratch buffer
 
 (defvar-local scratsh-scratch-minor-mode nil)
 
