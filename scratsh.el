@@ -1,3 +1,5 @@
+;; Scratsh version 0.1
+;;
 ;; features
 ;; [X] send region to terminal
 ;; [X] major mode which branches off of shell
@@ -6,14 +8,14 @@
 ;; [X] link a buffer to terminal: multiple buffers
 ;; [X] reference shell buffer name in scratch mode lile
 ;; [X] eliminate newlines in shell output
-;; [ ] support both vterm and ansi-term
-;; [ ] support bash and ?
-;; [X] customize inserting of logo on startup
-;; [ ] readme
-;; [ ] detect scripting language based on shell
 ;; [X] docstrings on public functions
+;; [ ] support both vterm and ansi-term
+;; [ ] first-class support for scripting languages other than bash
+;; [ ] detect scripting language based on shell
+;; [X] customize inserting of logo on startup
+;; [X] readme
 ;; [ ] configure windows for nice use (e.g. vertical stacking)
-(require 'a)
+;; [ ] git repository
 (require 'dash)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -139,7 +141,7 @@
 						  "]")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; top-level api
+;; public api
 
 (defun scratsh-send ()
   "Send the region between two comment lines to the connected shell. If there is no comment
@@ -217,5 +219,14 @@ See also: `scratsh-connect' `scratsh-new'"
 					   scratsh-primary-scratch-buffer))
 		  (scratsh--connect-shell-to-new-scratch-buffer shell-buffer))
 	  (scratsh--connect-shell-to-new-scratch-buffer shell-buffer))))
+
+(defun scratsh-switch ()
+  "When called in a shell buffer H with a primary scratch buffer C, opens C using
+`switch-to-buffer-other-window'. If H has no primary scratch buffer, do nothing.
+
+See also: `scratsh-jack-in'."
+  (interactive)
+  (when scratsh-primary-scratch-buffer
+	(switch-to-buffer-other-window scratsh-primary-scratch-buffer)))
 
 (provide 'scratsh)
