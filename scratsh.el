@@ -120,6 +120,24 @@
 	(message "Connected buffers: %s <--> %s " shell-buffer scratch-buffer)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; scratsh scratch minor mode
+
+(defvar-local scratsh-scratch-minor-mode nil)
+
+(define-minor-mode scratsh-shell-minor-mode
+  "Minor mode for a scratch buffer connected to a shell."
+  :keymap (let ((keymap (make-sparse-keymap)))
+			(define-key keymap (kbd "C-c C-c") 'scratsh-send)
+			(define-key keymap (kbd "C-c C-r") 'scratsh-send-region)
+			(define-key keymap (kbd "C-c C-b") 'scratsh-send-buffer)
+			keymap)
+  :lighter (:eval (concat " Scratsh["
+						  (if scratsh-linked-shell-buffer
+							  scratsh-linked-shell-buffer
+							(propertize "!disconnected!" 'face 'font-lock-warning-face))
+						  "]")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; top-level api
 
 (defun scratsh-new ()
@@ -157,25 +175,5 @@
 					   scratsh-primary-scratch-buffer))
 		  (scratsh--connect-shell-to-new-scratch-buffer shell-buffer))
 	  (scratsh--connect-shell-to-new-scratch-buffer shell-buffer))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; scratsh scratch minor mode
-
-(defvar-local scratsh-scratch-minor-mode nil)
-
-(define-minor-mode scratsh-shell-minor-mode
-  "Minor mode for a scratch buffer connected to a shell."
-  :keymap (let ((keymap (make-sparse-keymap)))
-			(define-key keymap (kbd "C-c C-c") 'scratsh-send)
-			(define-key keymap (kbd "C-c C-r") 'scratsh-send-region)
-			(define-key keymap (kbd "C-c C-b") 'scratsh-send-buffer)
-			keymap)
-  :lighter (:eval (concat " Scratsh["
-						  (if scratsh-linked-shell-buffer
-							  scratsh-linked-shell-buffer
-							(propertize "!disconnected!" 'face 'font-lock-warning-face))
-						  "]")))
-
-(propertize "!disconnected!" 'face 'font-lock-warning-face)
 
 (provide 'scratsh)
